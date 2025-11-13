@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados - Análise Wavelet Estatística</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+<div class="header">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="AnaliseEEG Logo" class="logo">
+    <nav class="main-nav">
+        <a href="{{ url_for('index') }}">Início</a>
+        <a href="{{ url_for('info_eeg') }}">O que é EEG?</a>
+    </nav>
+</div>
+
+<div class="main">
+    <h1>Resultados da Análise Wavelet</h1>
+
+
+    <div class="analysis-section">
+        <h2>Decomposição do Sinal por Nível</h2>
+        <div class="image-container1">
+            {% for resultado in dwt_resultados %}
+            <div class="image-item1">
+                <img src="data:image/png;base64,{{ resultado.grafico_decomposicao }}" alt="Gráfico de Decomposição para o canal {{ resultado.label }}" class="result-image" style="margin-left: auto; margin-right: auto;">
+                <a href="data:image/png;base64,{{ resultado.grafico_decomposicao }}" download="decomposicao_sinal_{{ resultado.label }}.png" class="no-underline">
+                    <button class="start-button">Baixar Gráfico</button>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+
+    <div class="analysis-section">
+        <h2>Distribuição da Amplitude dos Coeficientes</h2>
+        <div class="image-container1">
+            {% for resultado in dwt_resultados %}
+            <div class="image-item1">
+                <img src="data:image/png;base64,{{ resultado.grafico_boxplot }}" alt="Gráfico Boxplot para o canal {{ resultado.label }}" class="result-image" style="margin-left: auto; margin-right: auto;">
+                <a href="data:image/png;base64,{{ resultado.grafico_boxplot }}" download="boxplot_coeficientes_{{ resultado.label }}.png" class="no-underline">
+                    <button class="start-button">Baixar Gráfico</button>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+
+    <div class="analysis-section">
+        <h2>Energia Relativa por Banda de Frequência</h2>
+        <div class="image-container1">
+            {% for resultado in dwt_resultados %}
+            <div class="image-item1">
+                <img src="data:image/png;base64,{{ resultado.grafico_energia }}" alt="Gráfico de Energia para o canal {{ resultado.label }}" class="result-image" style="margin-left: auto; margin-right: auto;">
+                <a href="data:image/png;base64,{{ resultado.grafico_energia }}" download="energia_relativa_{{ resultado.label }}.png" class="no-underline">
+                    <button class="start-button">Baixar Gráfico</button>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <img src="{{ url_for('static', filename='img/footer-logo.png') }}" alt="Footer Logo" width="100px">
+    <div class="descricao">
+        <p>Endereço: R. Cícero Duarte, 905 - Junco, Picos - PI, 64607-670</p>
+        <p>E-mail: sis_inf_cshnb@ufpi.edu.br</p>
+        <p>Telefone: (89) 3422-1043</p>
+    </div>
+    <img src="{{ url_for('static', filename='img/footer2-logo.png') }}" alt="Footer Logo" width="200px" height="70px" style="margin-top: 50px;">
+</div>
+
+</body>
+</html>

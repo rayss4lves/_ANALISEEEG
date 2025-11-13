@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informações sobre o EEG</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="header">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="AnaliseEEG Logo" class="logo">
+    <nav class="main-nav">
+        <a href="{{ url_for('index') }}">Início</a>
+    </nav>
+</div>
+
+
+    <div class="info-page-container">
+        
+    
+        <div class="info-hero">
+            <h1>O Universo do Eletroencefalograma (EEG)</h1>
+            <p class="subtitle">Uma jornada visual e informativa sobre a atividade elétrica do cérebro e seu potencial para a ciência e a saúde.</p>
+        </div>
+
+   
+        <div class="info-section info-section-with-image">
+            <div class="info-text-content">
+                <h2>Como Funciona o EEG?</h2>
+                <p>O Eletroencefalograma (EEG) é um método que monitora e registra a atividade elétrica do cérebro. Através de eletrodos posicionados no couro cabeludo, ele capta os minúsculos sinais elétricos gerados pela comunicação entre bilhões de neurônios.</p>
+                <p>Esses registros são fundamentais para diagnosticar distúrbios neurológicos, estudar padrões de sono, avaliar lesões cerebrais e muito mais, servindo como uma janela para o funcionamento do cérebro em tempo real.</p>
+            </div>
+            <div class="info-image-content">
+            
+                <img src="{{ url_for('static', filename='img/realizando_eeg.jpg') }}" alt="Paciente realizando um exame de EEG">
+            </div>
+        </div>
+
+   
+        <div class="info-section">
+            <h2>As 5 Ondas Cerebrais: A Orquestra da Mente</h2>
+            <p>As ondas cerebrais são como as notas musicais da nossa mente. Cada uma possui uma frequência diferente e está associada a estados distintos de consciência. Juntas, elas formam uma sinfonia que rege nossos pensamentos, emoções e percepções.</p>
+            <div class="wave-cards-container">
+                <div class="wave-card" style="border-color: #3498db;">
+                    <h3>Ondas Delta (0.5-4 Hz)</h3>
+                    <p>Associadas ao sono profundo, sem sonhos, e à regeneração do corpo. Essenciais para a recuperação física e mental.</p>
+                </div>
+                <div class="wave-card" style="border-color: #9b59b6;">
+                    <h3>Ondas Teta (4-8 Hz)</h3>
+                    <p>Predominam na meditação profunda, no estado de sonho (REM) e na criatividade. É o portal para o aprendizado e a memória.</p>
+                </div>
+                <div class="wave-card" style="border-color: #2ecc71;">
+                    <h3>Ondas Alfa (8-12 Hz)</h3>
+                    <p>Ocorrem em estados de relaxamento consciente, com os olhos fechados. Indicam uma mente calma, serena e pronta para a introspecção.</p>
+                </div>
+                <div class="wave-card" style="border-color: #f1c40f;">
+                    <h3>Ondas Beta (12-30 Hz)</h3>
+                    <p>As ondas do estado de alerta, foco, e atividade mental. Dominam quando estamos concentrados, resolvendo problemas ou engajados em uma conversa.</p>
+                </div>
+                <div class="wave-card" style="border-color: #e74c3c;">
+                    <h3>Ondas Gama (25-100 Hz)</h3>
+                    <p>As mais rápidas. Estão ligadas a picos de performance, processamento de informações complexas, percepção e consciência elevada.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>Galeria de Imagens</h2>
+            <div class="gallery-grid">
+         
+                <img src="{{ url_for('static', filename='img/equipamento_eeg.png') }}" alt="Equipamento de EEG">
+                <img src="{{ url_for('static', filename='img/equipamen.jpg') }}" alt="Mapa cerebral gerado por EEG">
+                <img src="{{ url_for('static', filename='img/mulhereeg.jpg') }}" alt="Exemplo de sinal de EEG">
+            </div>
+        </div>
+
+    
+        <div class="info-section">
+            <h2>Aplicações e Avanços Tecnológicos</h2>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>Aplicações Clínicas</h3>
+                    <ul>
+                        <li>Diagnóstico e monitoramento de epilepsia.</li>
+                        <li>Avaliação de distúrbios do sono.</li>
+                        <li>Detecção de lesões, tumores e AVCs.</li>
+                        <li>Monitoramento de atividade cerebral em coma.</li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <h3>Uso em Pesquisa</h3>
+                    <ul>
+                        <li>Estudo de processos cognitivos (memória, atenção).</li>
+                        <li>Neurofeedback para treinamento cerebral.</li>
+                        <li>Mapeamento de funções corticais.</li>
+                        <li>Interfaces cérebro-computador (BCI).</li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <h3>Desenvolvimentos Recentes</h3>
+                    <ul>
+                        <li>Sistemas EEG portáteis e sem fios (wearables).</li>
+                        <li>Eletrodos secos para maior conforto.</li>
+                        <li>Uso de IA para análise automática de dados.</li>
+                        <li>Integração com outras técnicas (fMRI).</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+ 
+        <div class="info-section sources">
+            <h3>Fontes e Referências</h3>
+            <p><a href="https://amenteemaravilhosa.com.br/tipos-de-ondas-cerebrais/" target="_blank">1 - A Mente é Maravilhosa</a></p>
+            <p><a href="https://minutosaudavel.com.br/eletroencefalograma-eeg-o-que-e-tipos-e-para-que-serve-o-exame-2/" target="_blank">2 - Minuto Saudável</a></p>
+            <p><a href="https://telemedicinamorsch.com.br/blog/laudo-de-eletroencefalograma-normal" target="_blank">3 - Telemedicina Morsch</a></p>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        <img src="{{ url_for('static', filename='img/footer-logo.png') }}" alt="Footer Logo" width="100px">
+        <div class="descricao">
+            <p>Endereço: R. Cícero Duarte, 905 - Junco, Picos - PI, 64607-670</p>
+            <p>E-mail: sis_inf_cshnb@ufpi.edu.br</p>
+            <p>Telefone: (89) 3422-1043</p>
+        </div>
+        <img src="{{ url_for('static', filename='img/footer2-logo.png') }}" alt="Footer Logo" width="200px" height="70px" style="margin-top: 50px;">
+    </div>
+</body>
+</html>

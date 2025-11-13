@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise e Visualização de EEG</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="header">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="AnaliseEEG Logo" class="logo">
+    <nav class="main-nav">
+        <a href="{{ url_for('index') }}">Início</a>
+        <a href="{{ url_for('info_eeg') }}">O que é EEG?</a>
+    </nav>
+</div>
+
+    <div class="main">
+        <div class="edf-details-box">
+            <h2>Selecionar Exame para Análise</h2>
+            <p>Você está visualizando: <strong>{{ current_file }}</strong></p>
+            
+            <div class="form-group" style="text-align: center;">
+                <label for="file-selector">Trocar de exame:</label>
+                <select id="file-selector" onchange="window.location.href=this.value;">
+                    {% for file in uploaded_files %}
+                        <option value="{{ url_for('analise', filename=file) }}" {% if file == current_file %}selected{% endif %}>
+                            {{ file }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <a href="{{ url_for('index') }}" class="start-button no-underline" style="display: inline-block; width: auto; margin-top: 10px;">Enviar Novos Arquivos</a>
+        </div>
+        
+        <div class="edf-details-box">
+            <h1>Informações do EEG</h1>
+            <div class="edf-details">
+                <p><strong>Nome do Paciente:</strong> {{ patient_name }}</p>
+                <p><strong>Data de Nascimento:</strong> {{ data_nasci }}</p>
+                <p><strong>Sexo:</strong> {{ sexo }}</p>
+                <p><strong>Data do Exame:</strong> {{ record_date }}</p>
+                <p><strong>Horário:</strong> {{ record_time }}</p>
+                <p><strong>Duração do Exame:</strong> {{ exam_duration }} Min</p>
+                <p><strong>Quantidade de Canais:</strong> {{ channels_info_table|length }}</p>
+                <p><strong>Frequência do Exame:</strong> {{ channels_info_table[0].frequency }}</p>
+            </div>
+        </div>
+
+        <div class="edf-details-box">
+            <h2>Visualização do Exame</h2>
+            <div id="viewer-controls">
+                <button id="prev-epoch-btn" class="start-button">Anterior</button>
+                <span id="time-display">0.00s - 10.00s</span>
+                <button id="next-epoch-btn" class="start-button">Próximo</button>
+            </div>
+            <div id="eeg-viewer-container"></div>
+        </div>
+
+        <div class="analysis-section">
+            <h2>Criar Análise Detalhada</h2>
+            <form action="{{ url_for('criar_analise') }}" method="post">
+                <div class="form-group">
+                    <label>Filtragem de Sinal</label>
+                    <div class="filter-options" style="justify-content: center;">
+                        <div><input type="radio" id="filter_none" name="filter_type" value="none" checked> <label for="filter_none">Sem Filtro</label></div>
+                        <div><input type="radio" id="filter_standard" name="filter_type" value="standard"> <label for="filter_standard">Filtro Padrão (0.5-40Hz)</label></div>
+                        <div><input type="radio" id="filter_custom" name="filter_type" value="custom"> <label for="filter_custom">Filtro Personalizado</label></div>
+                    </div>
+                </div>
+                <div id="custom_filter_fields" style="display:none; margin-left: 20px; border-left: 3px solid #009688; padding-left: 15px;">
+                    <div class="form-group"><label for="lowcut">Frequência Mínima (Hz)</label><input type="number" id="lowcut" name="lowcut" step="0.1" placeholder="Ex: 1.0"></div>
+                    <div class="form-group"><label for="highcut">Frequência Máxima (Hz)</label><input type="number" id="highcut" name="highcut" step="0.1" placeholder="Ex: 30.0"></div>
+                </div>
+                <div class="form-group">
+                    <label for="method">Método de Análise</label>
+                    <select id="method" name="method" required>
+                        <option value="fft">Transformada Rápida de Fourier (FFT)</option>
+                        <option value="twc">Transformada de Wavelet Discreta (TWC)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Selecionar Canais</label>
+                    <div class="channel-checkboxes">
+                        <label><input type="checkbox" id="select_all"> Selecionar Todos</label>
+                        {% for channel in channels %}
+                        <label><input type="checkbox" name="channels" value="{{ channel.name }}"> {{ channel.name }}</label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <button class="start-button" type="submit">Criar</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="footer">
+        <img src="{{ url_for('static', filename='img/footer-logo.png') }}" alt="Footer Logo" width="100px">
+        <div class="descricao">
+            <p>Endereço: R. Cícero Duarte, 905 - Junco, Picos - PI, 64607-670</p>
+            <p>E-mail: sis_inf_cshnb@ufpi.edu.br</p>
+            <p>Telefone: (89) 3422-1043</p>
+        </div>
+        <img src="{{ url_for('static', filename='img/footer2-logo.png') }}" alt="Footer Logo" width="200px" height="70px" style="margin-top: 50px;">
+    </div>
+
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script>
+       
+        document.getElementById('select_all').addEventListener('change', e => {
+            document.querySelectorAll('.channel-checkboxes input[type="checkbox"]').forEach(c => {
+                if (c.id !== 'select_all') c.checked = e.target.checked;
+            });
+        });
+        document.querySelectorAll('input[name="filter_type"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                document.getElementById('custom_filter_fields').style.display = 
+                    document.getElementById('filter_custom').checked ? 'block' : 'none';
+            });
+        });
+
+        //visualizar eeg
+        const plotDiv = document.getElementById('eeg-viewer-container');
+        const timeDisplay = document.getElementById('time-display');
+        const prevBtn = document.getElementById('prev-epoch-btn');
+        const nextBtn = document.getElementById('next-epoch-btn');
+        let current_time = 0;
+        const epoch_duration = 10;
+        const file_duration = {{ file_duration }};
+        const filename = "{{ current_file }}";
+        const layout = {
+            yaxis: { showticklabels: false, fixedrange: true, zeroline: false },
+            xaxis: { title: 'Tempo (s)', zeroline: false },
+            showlegend: false,
+            margin: { l: 80, r: 20, t: 20, b: 40 },
+            hovermode: false,
+            height: {{ channels|length }} * 30 + 60
+        };
+
+        function initializeViewer() {
+            const initialTraces = {{ initial_traces|safe }};
+            layout.annotations = {{ initial_annotations|safe }};
+            Plotly.newPlot(plotDiv, initialTraces, layout);
+            updateControls();
+        }
+
+        async function updateEpoch(startTime) {
+            const response = await fetch(`/get_eeg_chunk?filename=${filename}&start=${startTime}`);
+            if (!response.ok) return;
+            const data = await response.json();
+            layout.annotations = data.annotations;
+            Plotly.react(plotDiv, data.traces, layout);
+            current_time = startTime;
+            updateControls();
+        }
+
+        function updateControls() {
+            const endTime = Math.min(current_time + epoch_duration, file_duration);
+            timeDisplay.textContent = `${current_time.toFixed(2)}s - ${endTime.toFixed(2)}s`;
+            prevBtn.disabled = current_time <= 0;
+            nextBtn.disabled = (current_time + epoch_duration) >= file_duration;
+        }
+
+        prevBtn.addEventListener('click', () => updateEpoch(Math.max(0, current_time - epoch_duration)));
+        nextBtn.addEventListener('click', () => {
+            if ((current_time + epoch_duration) < file_duration) updateEpoch(current_time + epoch_duration);
+        });
+
+        initializeViewer();
+    </script>
+</body>
+</html>

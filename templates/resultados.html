@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados da Análise EEG</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    
+</head>
+<body>
+    <div class="header">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="AnaliseEEG Logo" class="logo">
+    <nav class="main-nav">
+        <a href="{{ url_for('index') }}">Início</a>
+        <a href="{{ url_for('info_eeg') }}">O que é EEG?</a>
+    </nav>
+</div>
+
+    <div class="main">
+        <h1>Resultados da Análise</h1>
+
+        <h2>Espectrograma(s)</h2>
+        <div class="image-container1">
+            {% for espectrograma in espectrogramas %}
+            <div class="image-item1">
+                <img src="data:image/png;base64,{{ espectrograma }}" alt="Espectrograma">
+                <a href="data:image/png;base64,{{ espectrograma }}" download="espectrograma.png" class="no-underline">
+                    <button class="start-button">Baixar Espectrograma</button>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <h2>DEP (Densidade Espectral de Potência)</h2>
+        <div class="image-container1">
+            {% for psd in psd_graficos %}
+            <div class="image-item1">
+                <img src="data:image/png;base64,{{ psd }}" alt="PSD">
+                <a href="data:image/png;base64,{{ psd }}" download="psd.png" class="no-underline">
+                    <button class="start-button">Baixar DEP</button>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+
+        <h2>Transformada de Fourier (FFT)</h2>
+        <div class="image-container1">
+            {% for fft in fft_graficos %}
+            <div class="image-item1">
+                <img src="data:image/png;base64,{{ fft }}" alt="PSD">
+                <a href="data:image/png;base64,{{ fft }}" download="fft.png" class="no-underline">
+                    <button class="start-button">Baixar FFT</button>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        
+    </div>
+
+    <div class="footer">
+        <img src="{{ url_for('static', filename='img/footer-logo.png') }}" alt="Footer Logo" width="100px">
+        <div class="descricao">
+            <p>Endereço: R. Cícero Duarte, 905 - Junco, Picos - PI, 64607-670</p>
+            <p>E-mail: sis_inf_cshnb@ufpi.edu.br</p>
+            <p>Telefone: (89) 3422-1043</p>
+        </div>
+        <img src="{{ url_for('static', filename='img/footer2-logo.png') }}" alt="Footer Logo" width="200px" height="70px" style="margin-top: 50px;">
+    </div>
+    
+</body>
+</html>
