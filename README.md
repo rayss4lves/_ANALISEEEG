@@ -1,4 +1,4 @@
-# _ANALISEEEG
+#ANALISEEEG
 
 Aplicação web construída em Flask para facilitar a visualização e análise de sinais de EEG (Eletroencefalograma) armazenados em arquivos EDF. O sistema permite realizar filtragem, gerar gráficos como espectrograma, densidade espectral de potência (DEP), FFT e análises baseadas em Wavelet Discreta, além de oferecer um visualizador interativo de trechos do exame.
 
