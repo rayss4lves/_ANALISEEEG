@@ -30,8 +30,9 @@ Aplicação web construída em Flask para facilitar a visualização e análise 
 
 1. Clone este repositório:
    ```bash
-   git clone https://github.com/seu-usuario/TCCGITHUB.git
-   cd TCCGITHUB/_ANALISEEEG
+   git clone https://github.com/eriklustosa/_ANALISEEEG.git
+   cd _ANALISEEEG
+
    ```
 
 2. Crie e ative um ambiente virtual (opcional, mas recomendado):
