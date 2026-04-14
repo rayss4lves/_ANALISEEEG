@@ -1,0 +1,14 @@
+# Ignorar arquivos temporários
+*.log
+*.pyc
+*.pyd
+*.venv
+
+# Ignorar pasta de ambiente virtual
+venv/
+
+# Ignorar cache do Python
+__pycache__/
+
+# Ignorar os arquivos de uploads
+uploads/*

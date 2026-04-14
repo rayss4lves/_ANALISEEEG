@@ -8,6 +8,7 @@ import io
 import base64
 import pywt
 import pandas as pd
+from MFDFA import MFDFA
 
 
 plt.rcParams['xtick.labelsize'] = 14
@@ -343,3 +344,76 @@ def fig_to_base64(fig):
     fig.savefig(buf, format='png', bbox_inches='tight', dpi=95)
     buf.seek(0)
     return base64.b64encode(buf.getvalue()).decode('utf-8')
+
+
+
+
+################################ DFA ################################
+
+def calcular_lag(tam_sinal, n_lags=100, order=2):
+    lag_min = order + 1
+    lag_max = tam_sinal // 4
+    lag = np.logspace(np.log10(lag_min), np.log10(lag_max), n_lags).astype(int)
+    return np.unique(lag)
+
+def calcular_q():
+    q = np.arange(-10, 11)  # q de -5 a 6 (-10, 10)
+    q = q[q != 0]  # remover q=0 para evitar log(0) em Fq
+    return q
+
+# funcao para processar os sinais 
+def processar_sinais(sinal):
+    # Garante formato (N_amostras, 1) exigido pelo MFDFA
+    if sinal.ndim == 2:
+        sinal = sinal[0].reshape(-1, 1)  # pega o primeiro canal e reformata
+    else:
+        sinal = sinal.reshape(-1, 1)
+
+    tam_sinal = len(sinal)
+    print(tam_sinal)
+
+    lag = calcular_lag(tam_sinal)
+    # print(f"Lags: {lag}")
+
+    q = calcular_q()
+    print(f"Analisando...")
+    
+    return lag, q, sinal
+
+# funcao para aplicar o MFdfa
+def aplicar_mfdfa(sinal):
+    lag, q, sinal = processar_sinais(sinal)
+    #aplicar MFdfa
+    lag_out, dfa = MFDFA(sinal, lag=lag, q=q, order=2)
+    print(f"1 linha de resultado dfa:\n{dfa[0]}")
+        
+    return {
+        "sinal": sinal,
+        "lag_out": lag_out,
+        "dfa": dfa,
+        "lag_out": lag_out,
+        "dfa": dfa,
+        "lag": lag,
+        "q": q
+    }
+
+def gerar_mfdfa_grafico_duplo_log(resultado):
+    plt.loglog(resultado["lag_out"], resultado["dfa"], 'o', label='fOU: MFDFA q=2')
+    metade = len(resultado["lag_out"])
+    np.polyfit(np.log(resultado["lag_out"][:metade]), np.log(resultado["dfa"][:metade]), 1)[0]
+
+    # plt.figure()
+    # plt.xlabel('Lag')
+    # plt.ylabel('DFA')
+    
+
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight', dpi=95)
+    plt.close()
+    buf.seek(0)
+
+    return base64.b64encode(buf.read()).decode('utf-8')
+
+
+
+

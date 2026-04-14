@@ -8,6 +8,7 @@ import os
 import pandas as pd
 from werkzeug.utils import secure_filename
 from analise import remover_ruido, aplicar_fft, gerar_espectrograma_em_base64, gerar_psd_em_base64, gerar_fft_em_base64, aplicar_dwt, gerar_dwt_analise
+from analise import aplicar_mfdfa, gerar_mfdfa_grafico_duplo_log
 
 app = Flask(__name__)
 
@@ -240,6 +241,11 @@ def criar_analise():
         coeffs = aplicar_dwt(sinais_para_analise)
         dwt_resultados = gerar_dwt_analise(sinais_para_analise, coeffs, labels_filtrados, sfreq)
         return render_template('resultados_wavelet.html', dwt_resultados=dwt_resultados)
+    elif metodo == 'mfdfa':
+        resultado = aplicar_mfdfa(dados_filtrados)
+        espectrogramas = gerar_espectrograma_em_base64(dados_filtrados, sfreq, labels_filtrados)
+        duplo_log = gerar_mfdfa_grafico_duplo_log(resultado)
+        return render_template('resultados_mfdfa.html', duplo_log=duplo_log)
     return redirect(url_for('analise', filename=nome_arquivo))
 
 
