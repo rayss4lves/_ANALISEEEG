@@ -8,18 +8,30 @@
 </head>
 <body>
     <div class="header">
-    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="AnaliseEEG Logo" class="logo">
-    <nav class="main-nav">
-        <a href="{{ url_for('index') }}">Início</a>
-        <a href="{{ url_for('info_eeg') }}">O que é EEG?</a>
-    </nav>
-</div>
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="AnaliseEEG Logo" class="logo">
+        <nav class="main-nav">
+            <a href="{{ url_for('index') }}">Início</a>
+            <a href="{{ url_for('info_eeg') }}">O que é EEG?</a>
+        </nav>
+    </div>
 
     <div class="main">
+        {% if avisos %}
+        <div id="aviso-mfdfa" class="alert-box" style="background: #fff3cd; border: 1px solid #ffeeba; padding: 20px; margin-bottom: 25px; border-radius: 8px; color: #856404;">
+            <h3 style="margin-top: 0;">⚠️ Atenção: Qualidade da Análise MFDFA</h3>
+            <p>A validação estatística detectou problemas com os parâmetros atuais:</p>
+            <ul>
+                {% for aviso in avisos %}
+                    <li>{{ aviso }}</li>
+                {% endfor %}
+            </ul>
+            <p><strong>Sugestão:</strong> Ajuste as escalas (Lag) ou verifique se o sinal contém artefatos antes de tentar novamente.</p>
+        </div>
+        {% endif %}
+
         <div class="edf-details-box">
             <h2>Selecionar Exame para Análise</h2>
             <p>Você está visualizando: <strong>{{ current_file }}</strong></p>
-            
             <div class="form-group" style="text-align: center;">
                 <label for="file-selector">Trocar de exame:</label>
                 <select id="file-selector" onchange="window.location.href=this.value;">
@@ -30,7 +42,6 @@
                     {% endfor %}
                 </select>
             </div>
-            
             <a href="{{ url_for('index') }}" class="start-button no-underline" style="display: inline-block; width: auto; margin-top: 10px;">Enviar Novos Arquivos</a>
         </div>
         
@@ -38,13 +49,9 @@
             <h1>Informações do EEG</h1>
             <div class="edf-details">
                 <p><strong>Nome do Paciente:</strong> {{ patient_name }}</p>
-                <p><strong>Data de Nascimento:</strong> {{ data_nasci }}</p>
-                <p><strong>Sexo:</strong> {{ sexo }}</p>
                 <p><strong>Data do Exame:</strong> {{ record_date }}</p>
-                <p><strong>Horário:</strong> {{ record_time }}</p>
                 <p><strong>Duração do Exame:</strong> {{ exam_duration }} Min</p>
                 <p><strong>Quantidade de Canais:</strong> {{ channels_info_table|length }}</p>
-                <p><strong>Frequência do Exame:</strong> {{ channels_info_table[0].frequency }}</p>
             </div>
         </div>
 
@@ -70,9 +77,10 @@
                     </div>
                 </div>
                 <div id="custom_filter_fields" style="display:none; margin-left: 20px; border-left: 3px solid #009688; padding-left: 15px;">
-                    <div class="form-group"><label for="lowcut">Frequência Mínima (Hz)</label><input type="number" id="lowcut" name="lowcut" step="0.1" placeholder="Ex: 1.0"></div>
-                    <div class="form-group"><label for="highcut">Frequência Máxima (Hz)</label><input type="number" id="highcut" name="highcut" step="0.1" placeholder="Ex: 30.0"></div>
+                    <div class="form-group"><label for="lowcut">Frequência Mínima (Hz)</label><input type="number" id="lowcut" name="lowcut" step="0.1"></div>
+                    <div class="form-group"><label for="highcut">Frequência Máxima (Hz)</label><input type="number" id="highcut" name="highcut" step="0.1"></div>
                 </div>
+
                 <div class="form-group">
                     <label for="method">Método de Análise</label>
                     <select id="method" name="method" required>
@@ -81,12 +89,44 @@
                         <option value="mfdfa">Análise de Flutuação Destendenciada - Multifractal (MFDFA)</option>
                     </select>
                 </div>
+
+                <div id="mfdfa_params" style="display:none; margin: 15px 0; padding: 15px; border: 1px solid #009688; border-radius: 5px; background: #f9f9f9;">
+                <label><strong>Parâmetros MFDFA:</strong></label>
+                
+                <div style="margin: 10px 0;">
+                    <label>Escalas (Lag):</label>
+                    <span class="help-icon" title="O Lag define o tamanho das janelas de observação. Min: Tamanho inicial da janela. Máx: Tamanho máximo da janela. Qtd: Quantidade de divisões entre min e máx.">?</span>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" name="lag_min" placeholder="Mín (32)">
+                        <input type="number" name="lag_max" placeholder="Máx (N/10)">
+                        <input type="number" name="lag_res" placeholder="Qtd (51)">
+                    </div>
+                </div>
+
+                <div style="margin: 10px 0;">
+                    <label>Valores de q:</label>
+                    <span class="help-icon" title="Parâmetro de ordem q: Valores negativos focam em flutuações pequenas, positivos em flutuações grandes. Passo: Incremento entre os valores.">?</span>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" name="q_min" step="0.5" placeholder="Mín (-5)">
+                        <input type="number" name="q_max" step="0.5" placeholder="Máx (5)">
+                        <input type="number" name="q_step" step="0.1" placeholder="Passo (0.5)">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Ordem do Polinômio:</label>
+                    <span class="help-icon" title="Ordem do ajuste polinomial (geralmente 1 para MFDFA linear). Ajustes mais altos removem tendências mais complexas.">?</span>
+                    <input type="number" name="mfdfa_order" value="1" style="width: 100px;">
+                </div>
+            </div>
+        </div>
+
                 <div class="form-group">
                     <label>Selecionar Canais</label>
-                    <div class="channel-checkboxes">
-                        <label><input type="checkbox" id="select_all"> Selecionar Todos</label>
+                    <div class="channel-checkboxes" id="channel-container">
+                        <label><input type="checkbox" id="select_all"> <strong>Selecionar Todos</strong></label>
                         {% for channel in channels %}
-                        <label><input type="checkbox" name="channels" value="{{ channel.name }}"> {{ channel.name }}</label>
+                        <label><input type="checkbox" name="channels" value="{{ channel.name }}" class="channel-input"> {{ channel.name }}</label>
                         {% endfor %}
                     </div>
                 </div>
@@ -95,79 +135,54 @@
         </div>
     </div>
 
-    <div class="footer">
-        <img src="{{ url_for('static', filename='img/footer-logo.png') }}" alt="Footer Logo" width="100px">
-        <div class="descricao">
-            <p>Endereço: R. Cícero Duarte, 905 - Junco, Picos - PI, 64607-670</p>
-            <p>E-mail: sis_inf_cshnb@ufpi.edu.br</p>
-            <p>Telefone: (89) 3422-1043</p>
-        </div>
-        <img src="{{ url_for('static', filename='img/footer2-logo.png') }}" alt="Footer Logo" width="200px" height="70px" style="margin-top: 50px;">
-    </div>
-
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script>
-       
-        document.getElementById('select_all').addEventListener('change', e => {
-            document.querySelectorAll('.channel-checkboxes input[type="checkbox"]').forEach(c => {
-                if (c.id !== 'select_all') c.checked = e.target.checked;
+
+        // CORRIGIR O ICONE DE AJUDA PARA EXIBIR O TEXTO COMPLETO
+        // Rola a página para o alerta se ele existir
+        window.onload = function() {
+            const alerta = document.getElementById('aviso-mfdfa');
+            if (alerta) {
+                alerta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        };
+
+        // Lógica de interface
+        const methodSelect = document.getElementById('method');
+        const mfdfaParams = document.getElementById('mfdfa_params');
+        const channelCheckboxes = document.querySelectorAll('.channel-input');
+        const selectAllCheckbox = document.getElementById('select_all');
+
+        methodSelect.addEventListener('change', function() {
+            const isMFDFA = this.value === 'mfdfa';
+            mfdfaParams.style.display = isMFDFA ? 'block' : 'none';
+            if (isMFDFA) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.disabled = true;
+                channelCheckboxes.forEach(cb => cb.checked = false);
+            } else {
+                selectAllCheckbox.disabled = false;
+            }
+        });
+
+        channelCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if (methodSelect.value === 'mfdfa' && this.checked) {
+                    channelCheckboxes.forEach(other => { if (other !== this) other.checked = false; });
+                }
             });
         });
+
+        selectAllCheckbox.addEventListener('change', e => {
+            channelCheckboxes.forEach(c => c.checked = e.target.checked);
+        });
+
         document.querySelectorAll('input[name="filter_type"]').forEach(radio => {
             radio.addEventListener('change', () => {
                 document.getElementById('custom_filter_fields').style.display = 
                     document.getElementById('filter_custom').checked ? 'block' : 'none';
             });
         });
-
-        //visualizar eeg
-        const plotDiv = document.getElementById('eeg-viewer-container');
-        const timeDisplay = document.getElementById('time-display');
-        const prevBtn = document.getElementById('prev-epoch-btn');
-        const nextBtn = document.getElementById('next-epoch-btn');
-        let current_time = 0;
-        const epoch_duration = 10;
-        const file_duration = {{ file_duration }};
-        const filename = "{{ current_file }}";
-        const layout = {
-            yaxis: { showticklabels: false, fixedrange: true, zeroline: false },
-            xaxis: { title: 'Tempo (s)', zeroline: false },
-            showlegend: false,
-            margin: { l: 80, r: 20, t: 20, b: 40 },
-            hovermode: false,
-            height: {{ channels|length }} * 30 + 60
-        };
-
-        function initializeViewer() {
-            const initialTraces = {{ initial_traces|safe }};
-            layout.annotations = {{ initial_annotations|safe }};
-            Plotly.newPlot(plotDiv, initialTraces, layout);
-            updateControls();
-        }
-
-        async function updateEpoch(startTime) {
-            const response = await fetch(`/get_eeg_chunk?filename=${filename}&start=${startTime}`);
-            if (!response.ok) return;
-            const data = await response.json();
-            layout.annotations = data.annotations;
-            Plotly.react(plotDiv, data.traces, layout);
-            current_time = startTime;
-            updateControls();
-        }
-
-        function updateControls() {
-            const endTime = Math.min(current_time + epoch_duration, file_duration);
-            timeDisplay.textContent = `${current_time.toFixed(2)}s - ${endTime.toFixed(2)}s`;
-            prevBtn.disabled = current_time <= 0;
-            nextBtn.disabled = (current_time + epoch_duration) >= file_duration;
-        }
-
-        prevBtn.addEventListener('click', () => updateEpoch(Math.max(0, current_time - epoch_duration)));
-        nextBtn.addEventListener('click', () => {
-            if ((current_time + epoch_duration) < file_duration) updateEpoch(current_time + epoch_duration);
-        });
-
-        initializeViewer();
     </script>
 </body>
 </html>

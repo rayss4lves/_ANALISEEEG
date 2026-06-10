@@ -10,5 +10,6 @@ venv/
 # Ignorar cache do Python
 __pycache__/
 
-# Ignorar os arquivos de uploads
+# Ignorar os arquivos de uploads, mas manter a pasta
 uploads/*
+!uploads/

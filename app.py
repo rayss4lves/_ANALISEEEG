@@ -8,7 +8,7 @@ import os
 import pandas as pd
 from werkzeug.utils import secure_filename
 from analise import remover_ruido, aplicar_fft, gerar_espectrograma_em_base64, gerar_psd_em_base64, gerar_fft_em_base64, aplicar_dwt, gerar_dwt_analise
-from analise import aplicar_mfdfa, gerar_mfdfa_grafico_duplo_log
+from analise import aplicar_mfdfa, gerar_mfdfa_grafico_duplo_log, calcular_lag, analisar_e_validar_mfdfa, calcular_q, calcular_multifractalidade, gerar_graficos_multifractais
 
 app = Flask(__name__)
 
@@ -93,7 +93,40 @@ def get_eeg_data_for_viewer(filepath, start_second=0, duration=10):
         return None, None, None
 
 
+def get_analise_context(filename):
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    traces, annotations, file_duration = get_eeg_data_for_viewer(filepath, 0, 10)
+    
+    with pyedflib.EdfReader(filepath) as f:
+        # Extração de metadados básicos
+        start_dt = f.getStartdatetime()
+        sexo = {'Male': 'Masculino', 'Female': 'Feminino'}.get(f.getSex(), 'Não Informado')
+        
+        # Gera a tabela de canais de forma compacta
+        channels_info = [{
+            "name": f.getLabel(i), 
+            "frequency": f"{f.getSampleFrequency(i)} Hz",
+            "physical_min": f.getPhysicalMinimum(i), 
+            "physical_max": f.getPhysicalMaximum(i),
+            "digital_min": f.getDigitalMinimum(i), 
+            "digital_max": f.getDigitalMaximum(i)
+        } for i in range(f.signals_in_file)]
 
+        return {
+            "uploaded_files": session.get('uploaded_files'),
+            "current_file": filename,
+            "channels": [{"name": c["name"]} for c in channels_info],
+            "channels_info_table": channels_info,
+            "patient_name": f.getPatientName() or 'Não Informado',
+            "data_nasci": f.getBirthdate() or 'Não Informado',
+            "sexo": sexo,
+            "record_date": start_dt.strftime("%d/%m/%Y") if start_dt else 'Não Informado',
+            "record_time": start_dt.strftime("%H:%M") if start_dt else 'Não Informado',
+            "exam_duration": round(f.getFileDuration() / 60, 2),
+            "initial_traces": json.dumps(traces),
+            "initial_annotations": json.dumps(annotations),
+            "file_duration": file_duration
+        }
 
 @app.route('/')
 def index():
@@ -242,10 +275,44 @@ def criar_analise():
         dwt_resultados = gerar_dwt_analise(sinais_para_analise, coeffs, labels_filtrados, sfreq)
         return render_template('resultados_wavelet.html', dwt_resultados=dwt_resultados)
     elif metodo == 'mfdfa':
-        resultado = aplicar_mfdfa(dados_filtrados)
-        espectrogramas = gerar_espectrograma_em_base64(dados_filtrados, sfreq, labels_filtrados)
+        # Captura parâmetros do formulário
+        lag_min = int(request.form.get('lag_min') or 32)
+        lag_max = int(request.form.get('lag_max') or (len(dados_filtrados[0]) // 10))
+        lag_res = int(request.form.get('lag_res') or 51)
+        
+        q_min = float(request.form.get('q_min') or -5.0)
+        q_max = float(request.form.get('q_max') or 5.0)
+        q_step = float(request.form.get('q_step') or 0.5)
+        order = int(request.form.get('mfdfa_order') or 1)
+        
+        # Gerar vetores conforme o usuário pediu
+        lags = calcular_lag(len(dados_filtrados[0]), scmin=lag_min, scmax=lag_max, scres=lag_res)
+        q_values = calcular_q(q_min=q_min, q_max=q_max, q_step=q_step)
+
+        # Executa o cálculo (sua função customizada deve aceitar esses args)
+        # Assumindo que sua função retorna a matriz Fq e o gráfico
+        # Executa o cálculo
+        resultado = aplicar_mfdfa(dados_filtrados, sfreq, lags, q_values, order)
+        
+        # Realiza a validação
+        resultados_calculados, avisos = analisar_e_validar_mfdfa(lags, resultado["dfa"], q_values)
+        
+        # SÓ entra aqui se houver avisos DE VERDADE
+        if avisos:
+            context = get_analise_context(nome_arquivo)
+            # Certifique-se de que no seu HTML não tem um {{ resultados }} solto
+            return render_template('analise.html', **context, avisos=avisos)
+        
         duplo_log = gerar_mfdfa_grafico_duplo_log(resultado)
-        return render_template('resultados_mfdfa.html', duplo_log=duplo_log)
+        # 1. Calcular h(q), alpha, f(alpha)
+        h_q, tau_q, alpha, f_alpha = calcular_multifractalidade(resultado["dfa"], resultado["lag_out"], resultado["q_values"])
+
+        # 2. Gerar a string da imagem 
+        ######### CORRIGIR ESSE GRAFICO AQUI
+        imagem_multifractal = gerar_graficos_multifractais(h_q, tau_q, alpha, f_alpha, resultado["q_values"])
+                
+        return render_template('resultados_mfdfa.html', 
+                               duplo_log=duplo_log, imagem_multifractal=imagem_multifractal)
     return redirect(url_for('analise', filename=nome_arquivo))
 
 

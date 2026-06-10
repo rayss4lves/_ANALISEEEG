@@ -150,6 +150,46 @@ body {
     gap: 50px;
 }
 
+/* Isso é vital para o posicionamento relativo ao ícone */
+.help-wrapper {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+/* Isso garante que o card flutue por cima de tudo */
+.help-card {
+    display: none; 
+    position: absolute;
+    top: 25px; /* Ajuste se necessário para ficar mais perto ou longe do ícone */
+    left: 0;
+    width: 250px;
+    background-color: white;
+    border: 1px solid black; 
+    padding: 12px;
+    border-radius: 4px;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.15);
+    z-index: 1000; /* Garante que fique sobre outros elementos */
+    font-size: 13px;
+    color: #333;
+}
+
+.help-icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    background-color: #d5d6d8;
+    color: #2f333a;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 12px;
+    line-height: 18px;
+    cursor: help;
+    margin-left: 5px;
+    font-weight: bold;
+}
+
 /*criar analise*/
 
 table {
