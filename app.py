@@ -305,14 +305,15 @@ def criar_analise():
         
         duplo_log = gerar_mfdfa_grafico_duplo_log(resultado)
         # 1. Calcular h(q), alpha, f(alpha)
-        h_q, tau_q, alpha, f_alpha = calcular_multifractalidade(resultado["dfa"], resultado["lag_out"], resultado["q_values"])
+        h_q, tau_q, alpha, f_alpha = calcular_multifractalidade(resultado["dfa"], resultado["lag_out"], resultado["q"])
 
         # 2. Gerar a string da imagem 
         ######### CORRIGIR ESSE GRAFICO AQUI
-        imagem_multifractal = gerar_graficos_multifractais(h_q, tau_q, alpha, f_alpha, resultado["q_values"])
+        imagem_multifractal = gerar_graficos_multifractais(h_q, tau_q, alpha, f_alpha, resultado["q"])
+        psd_graficos = gerar_psd_em_base64(dados_filtrados, sfreq, labels_filtrados)
                 
         return render_template('resultados_mfdfa.html', 
-                               duplo_log=duplo_log, imagem_multifractal=imagem_multifractal)
+                               duplo_log=duplo_log, imagem_multifractal=imagem_multifractal, delta_alpha=max(alpha) - min(alpha), h_q=h_q, tau_q=tau_q, alpha=alpha, f_alpha=f_alpha, psd_graficos=psd_graficos)
     return redirect(url_for('analise', filename=nome_arquivo))
 
 

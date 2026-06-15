@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Análise e Visualização de EEG</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
 </head>
 <body>
     <div class="header">
@@ -18,7 +19,7 @@
     <div class="main">
         {% if avisos %}
         <div id="aviso-mfdfa" class="alert-box" style="background: #fff3cd; border: 1px solid #ffeeba; padding: 20px; margin-bottom: 25px; border-radius: 8px; color: #856404;">
-            <h3 style="margin-top: 0;">⚠️ Atenção: Qualidade da Análise MFDFA</h3>
+            <h3 style="margin-top: 0;">⚠️ <strong>Atenção: Qualidade da Análise MFDFA</strong></h3>
             <p>A validação estatística detectou problemas com os parâmetros atuais:</p>
             <ul>
                 {% for aviso in avisos %}
@@ -90,36 +91,41 @@
                     </select>
                 </div>
 
-                <div id="mfdfa_params" style="display:none; margin: 15px 0; padding: 15px; border: 1px solid #009688; border-radius: 5px; background: #f9f9f9;">
+                <div id="mfdfa_params" style="display:none; margin: 15px 0; padding: 15px; border-radius: 5px;">
                 <label><strong>Parâmetros MFDFA:</strong></label>
                 
-                <div style="margin: 10px 0;">
-                    <label>Escalas (Lag):</label>
-                    <span class="help-icon" title="O Lag define o tamanho das janelas de observação. Min: Tamanho inicial da janela. Máx: Tamanho máximo da janela. Qtd: Quantidade de divisões entre min e máx.">?</span>
-                    <div style="display: flex; gap: 10px;">
+                <div style="margin: 15px 0; display: flex; flex-direction: column; align-items: center;">
+                    <div style="margin-bottom: 8px;">
+                        <label>Escalas (Lag):</label>
+                        <span class="help-icon" data-tooltip="O Lag define o tamanho das janelas de observação. Min: Tamanho inicial da janela. Máx: Tamanho máximo da janela. Qtd: Quantidade de divisões entre min e máx.">?</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
                         <input type="number" name="lag_min" placeholder="Mín (32)">
                         <input type="number" name="lag_max" placeholder="Máx (N/10)">
                         <input type="number" name="lag_res" placeholder="Qtd (51)">
                     </div>
                 </div>
 
-                <div style="margin: 10px 0;">
-                    <label>Valores de q:</label>
-                    <span class="help-icon" title="Parâmetro de ordem q: Valores negativos focam em flutuações pequenas, positivos em flutuações grandes. Passo: Incremento entre os valores.">?</span>
-                    <div style="display: flex; gap: 10px;">
+                <div style="margin: 15px 0; display: flex; flex-direction: column; align-items: center;">
+                    <div style="margin-bottom: 8px;">
+                        <label>Valores de q:</label>
+                        <span class="help-icon" data-tooltip="Parâmetro de ordem q: Valores negativos focam em flutuações pequenas, positivos em flutuações grandes. Passo: Incremento entre os valores.">?</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
                         <input type="number" name="q_min" step="0.5" placeholder="Mín (-5)">
                         <input type="number" name="q_max" step="0.5" placeholder="Máx (5)">
                         <input type="number" name="q_step" step="0.1" placeholder="Passo (0.5)">
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Ordem do Polinômio:</label>
-                    <span class="help-icon" title="Ordem do ajuste polinomial (geralmente 1 para MFDFA linear). Ajustes mais altos removem tendências mais complexas.">?</span>
-                    <input type="number" name="mfdfa_order" value="1" style="width: 100px;">
+                <div style="margin: 15px 0; display: flex; flex-direction: column; align-items: center;">
+                    <div style="margin-bottom: 8px;">
+                        <label>Ordem do Polinômio:</label>
+                        <span class="help-icon" data-tooltip="Ordem do ajuste polinomial (geralmente 1 para MFDFA linear). Ajustes mais altos removem tendências mais complexas.">?</span>
+                    </div>
+                    <input type="number" name="mfdfa_order" value="1" style="width: 100px; text-align: center;">
                 </div>
             </div>
-        </div>
 
                 <div class="form-group">
                     <label>Selecionar Canais</label>
@@ -135,11 +141,50 @@
         </div>
     </div>
 
+    <!-- Elemento do tooltip flutuante -->
+    <div id="tooltip-flutuante"></div>
+
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script>
+        // ── Tooltip flutuante ──────────────────────────────────────────
+        const tooltip = document.getElementById('tooltip-flutuante');
 
-        // CORRIGIR O ICONE DE AJUDA PARA EXIBIR O TEXTO COMPLETO
-        // Rola a página para o alerta se ele existir
+        document.querySelectorAll('.help-icon').forEach(icon => {
+            icon.addEventListener('mouseenter', function(e) {
+                tooltip.textContent = this.dataset.tooltip;
+                tooltip.style.display = 'block';
+                posicionarTooltip(e);
+            });
+
+            icon.addEventListener('mousemove', function(e) {
+                posicionarTooltip(e);
+            });
+
+            icon.addEventListener('mouseleave', function() {
+                tooltip.style.display = 'none';
+            });
+        });
+
+        function posicionarTooltip(e) {
+            const offset = 12;
+            let x = e.clientX + offset;
+            let y = e.clientY + offset;
+
+            // Evita sair da tela pela direita
+            if (x + 260 > window.innerWidth) {
+                x = e.clientX - 260 - offset;
+            }
+
+            // Evita sair da tela por baixo
+            if (y + tooltip.offsetHeight > window.innerHeight) {
+                y = e.clientY - tooltip.offsetHeight - offset;
+            }
+
+            tooltip.style.left = x + 'px';
+            tooltip.style.top = y + 'px';
+        }
+
+        // ── Rola para o alerta se existir ─────────────────────────────
         window.onload = function() {
             const alerta = document.getElementById('aviso-mfdfa');
             if (alerta) {
@@ -147,7 +192,7 @@
             }
         };
 
-        // Lógica de interface
+        // ── Lógica de interface ────────────────────────────────────────
         const methodSelect = document.getElementById('method');
         const mfdfaParams = document.getElementById('mfdfa_params');
         const channelCheckboxes = document.querySelectorAll('.channel-input');

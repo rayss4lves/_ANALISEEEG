@@ -19,7 +19,7 @@
     <div class="main">
         <h1>Resultados da Análise</h1>
         
-        <!-- <h2>DEP (Densidade Espectral de Potência)</h2>
+        <h2>DEP (Densidade Espectral de Potência)</h2>
         <div class="image-container1">
             {% for psd in psd_graficos %}
             <div class="image-item1">
@@ -29,7 +29,7 @@
                 </a>
             </div>
             {% endfor %}
-        </div> -->
+        </div>
 
 
         <h2>Análise de Flutuação Destendenciada - Multifractal (MFDFA)</h2>
@@ -41,10 +41,13 @@
                 </a>
             </div>
         </div>
+        <h2>Análise de Multifractalidade</h2>
         <div class="result-box">
-            <h3>Análise de Multifractalidade</h3>
-            <img src="data:image/png;base64,{{ grafico_base64 }}" alt="Gráfico MFDFA">
+            <img src="data:image/png;base64,{{ imagem_multifractal }}" alt="Gráfico MFDFA">
             <p><strong>Largura do Espectro (Δα):</strong> {{ delta_alpha|round(4) }}</p>
+            <a href="data:image/png;base64,{{ imagem_multifractal }}" download="imagem_multifractal.png" class="no-underline">
+                <button class="start-button">Baixar Imagem</button>
+            </a>
         </div>
         
     </div>

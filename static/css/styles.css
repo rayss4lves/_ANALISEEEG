@@ -192,6 +192,8 @@ body {
 
 /*criar analise*/
 
+
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -208,6 +210,43 @@ th {
     background-color: #f2f2f2;
 }
 
+/* CSS para o icone de ajuda*/
+.help-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    background: #009688;
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: help;
+    position: relative;
+    margin-left: 5px;
+}
+
+#tooltip-flutuante {
+    position: fixed;
+    /* --- NOVAS CORES COMBINANDO COM A PÁGINA --- */
+    background: #009688;      /* Fundo branco limpo */
+    color: white;           /* Texto cinza escuro para boa leitura */
+    border: 2px solid #009688; /* Borda grossa na cor verde da página */
+    
+    /* Mantendo os ajustes de tamanho anteriores */
+    padding: 8px 16px;
+    font-size: 13px;
+    line-height: 1.4;
+    width: 450px; /* Ajuste a largura conforme necessário */
+    
+    border-radius: 8px; /* Cantos um pouco mais arredondados */
+    white-space: normal;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15); /* Sombra mais suave */
+    pointer-events: none;
+    z-index: 9999;
+    display: none;
+}
 .analysis-section {
     margin-top: 40px;
     padding: 20px;

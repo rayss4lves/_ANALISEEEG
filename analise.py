@@ -457,6 +457,7 @@ def gerar_mfdfa_grafico_duplo_log(resultado):
 import numpy as np
 from sklearn.metrics import r2_score
 
+import scipy.stats as stats 
 from scipy.stats import linregress
 
 def analisar_e_validar_mfdfa(lags, Fq_matrix, q_values, use_log2=False):
@@ -537,7 +538,7 @@ def gerar_graficos_multifractais(h_q, tau_q, alpha, f_alpha, q_values):
 
     # Salva em buffer
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', bbox_inches='tight', dpi=95)
+    plt.savefig(buf, format='png', bbox_inches='tight', dpi=120)
     plt.close()
     buf.seek(0)
 
