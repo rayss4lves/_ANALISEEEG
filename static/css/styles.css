@@ -19,6 +19,7 @@ body {
     overflow: hidden; /* Garante que o conteúdo não vaze */
 }
 
+
 .logo {
  
     max-height: 150px; 
@@ -190,8 +191,8 @@ body {
     font-weight: bold;
 }
 
-/*criar analise*/
 
+/*##########################CRIAR ANALISE##########################*/
 
 
 table {
@@ -209,6 +210,31 @@ th, td {
 th {
     background-color: #f2f2f2;
 }
+
+/* Layout Geral */
+.mfdfa-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 15px 0;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.param-group {
+    margin: 15px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.input-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 8px;
+}
+
 
 /* CSS para o icone de ajuda*/
 .help-icon {
@@ -375,6 +401,7 @@ th {
 }
 
 
+/*################PAGINA DE RESULTADOS################*/
 
 
 .image-container1 {
@@ -515,6 +542,8 @@ th {
 .select-items div:hover {
     background-color: #e0f2f1; 
 }
+
+/*###########PAGINA INFO###########*/
 
 .info-page-container {
     max-width: 1200px;

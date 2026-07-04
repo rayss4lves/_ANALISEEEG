@@ -91,39 +91,40 @@
                     </select>
                 </div>
 
-                <div id="mfdfa_params" style="display:none; margin: 15px 0; padding: 15px; border-radius: 5px;">
-                <label><strong>Parâmetros MFDFA:</strong></label>
-                
-                <div style="margin: 15px 0; display: flex; flex-direction: column; align-items: center;">
-                    <div style="margin-bottom: 8px;">
-                        <label>Escalas (Lag):</label>
-                        <span class="help-icon" data-tooltip="O Lag define o tamanho das janelas de observação. Min: Tamanho inicial da janela. Máx: Tamanho máximo da janela. Qtd: Quantidade de divisões entre min e máx.">?</span>
+                <div id="mfdfa_params" class="mfdfa-container">
+                    <label><strong>Parâmetros MFDFA:</strong></label>
+                    
+                    <div class="param-group">
+                        <div>
+                            <label>Escalas (<i>Lag</i>):</label>
+                            <span class="help-icon" data-tooltip="Define o tamanho das janelas temporais. Mín: Valor inicial (ex: 32) para evitar sobreajuste em escalas muito curtas. Máx: Tamanho máximo (ex: N/10) para garantir estabilidade estatística. Qtd: Número de escalas avaliadas para gerar a superfície multifractal.">?</span>
+                        </div>
+                        <div class="input-row">
+                            <input type="number" name="lag_min" placeholder="Mín (32)">
+                            <input type="number" name="lag_max" placeholder="Máx (N/10)">
+                            <input type="number" name="lag_res" placeholder="Qtd (51)">
+                        </div>
                     </div>
-                    <div style="display: flex; gap: 10px; justify-content: center;">
-                        <input type="number" name="lag_min" placeholder="Mín (32)">
-                        <input type="number" name="lag_max" placeholder="Máx (N/10)">
-                        <input type="number" name="lag_res" placeholder="Qtd (51)">
-                    </div>
-                </div>
 
-                <div style="margin: 15px 0; display: flex; flex-direction: column; align-items: center;">
-                    <div style="margin-bottom: 8px;">
-                        <label>Valores de q:</label>
-                        <span class="help-icon" data-tooltip="Parâmetro de ordem q: Valores negativos focam em flutuações pequenas, positivos em flutuações grandes. Passo: Incremento entre os valores.">?</span>
+                    <div class="param-group">
+                        <div>
+                            <label>Valores de ordem <i>q</i>:</label>
+                            <span class="help-icon" data-tooltip="Momentos estatísticos 𝑞 da função de flutuação. Valores positivos (𝑞>0) amplificam componentes fractais com flutuações de grande amplitude. Valores negativos (𝑞<0) destacam flutuações de pequena amplitude. O Passo define a resolução do espectro multifractal.">?</span>
+                        </div>
+                        <div class="input-row">
+                            <input type="number" name="q_min" step="0.5" placeholder="Mín (-5)">
+                            <input type="number" name="q_max" step="0.5" placeholder="Máx (5)">
+                            <input type="number" name="q_step" step="0.1" placeholder="Passo (0.5)">
+                        </div>
                     </div>
-                    <div style="display: flex; gap: 10px; justify-content: center;">
-                        <input type="number" name="q_min" step="0.5" placeholder="Mín (-5)">
-                        <input type="number" name="q_max" step="0.5" placeholder="Máx (5)">
-                        <input type="number" name="q_step" step="0.1" placeholder="Passo (0.5)">
-                    </div>
-                </div>
 
-                <div style="margin: 15px 0; display: flex; flex-direction: column; align-items: center;">
-                    <div style="margin-bottom: 8px;">
-                        <label>Ordem do Polinômio:</label>
-                        <span class="help-icon" data-tooltip="Ordem do ajuste polinomial (geralmente 1 para MFDFA linear). Ajustes mais altos removem tendências mais complexas.">?</span>
+                    <div class="param-group">
+                        <div>
+                            <label>Ordem do Polinômio (Detrending):</label>
+                            <span class="help-icon" data-tooltip="Ordem do polinômio de ajuste local ($DFA_1$ para linear, $DFA_2$ para quadrática) usado para eliminar tendências não estacionárias do sinal. O artigo aponta que ordens maiores que 2 raramente são necessárias para séries temporais fisiológicas.">?</span>
+                        </div>
+                        <input type="number" name="mfdfa_order" value="1" style="width: 100px; text-align: center;">
                     </div>
-                    <input type="number" name="mfdfa_order" value="1" style="width: 100px; text-align: center;">
                 </div>
             </div>
 
