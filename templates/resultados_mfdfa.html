@@ -42,13 +42,61 @@
             </div>
         </div>
         <h2>Análise de Multifractalidade</h2>
-        <div class="result-box">
-            <img src="data:image/png;base64,{{ imagem_multifractal }}" alt="Gráfico MFDFA">
-            <p><strong>Largura do Espectro (Δα):</strong> {{ delta_alpha|round(4) }}</p>
-            <a href="data:image/png;base64,{{ imagem_multifractal }}" download="imagem_multifractal.png" class="no-underline">
-                <button class="start-button">Baixar Imagem</button>
+
+        <!-- Hurst -->
+        <div class="image-item1">
+            <h3>Expoente de Hurst Generalizado</h3>
+
+            <img src="data:image/png;base64,{{ hurst_grafico }}"
+                alt="Hurst">
+
+            <a href="data:image/png;base64,{{ hurst_grafico }}"
+            download="hurst.png"
+            class="no-underline">
+
+                <button class="start-button">
+                    Baixar Hurst
+                </button>
+
             </a>
         </div>
+
+        <!-- Massa -->
+        <div class="image-item1">
+            <h3>Expoente de Massa</h3>
+
+            <img src="data:image/png;base64,{{ massa_grafico }}"
+                alt="Mass Exponent">
+
+            <a href="data:image/png;base64,{{ massa_grafico }}"
+            download="mass_exponent.png"
+            class="no-underline">
+
+                <button class="start-button">
+                    Baixar Massa
+                </button>
+
+            </a>
+        </div>
+
+        <!-- Espectro -->
+        <div class="image-item1">
+            <h3>Espectro Multifractal</h3>
+
+            <img src="data:image/png;base64,{{ expectro_grafico }}"
+                alt="Spectrum">
+
+            <a href="data:image/png;base64,{{ expectro_grafico }}"
+            download="spectrum.png"
+            class="no-underline">
+
+                <button class="start-button">
+                    Baixar Espectro
+                </button>
+
+            </a>
+        </div>
+
         
     </div>
 

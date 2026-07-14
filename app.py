@@ -8,8 +8,8 @@ import os
 import pandas as pd
 from werkzeug.utils import secure_filename
 from analise import remover_ruido, aplicar_fft, gerar_espectrograma_em_base64, gerar_psd_em_base64, gerar_fft_em_base64, aplicar_dwt, gerar_dwt_analise
-from analise import aplicar_mfdfa, gerar_mfdfa_grafico_duplo_log, calcular_lag, analisar_e_validar_mfdfa, calcular_q, calcular_multifractalidade, gerar_graficos_multifractais
-
+from analise import aplicar_mfdfa, calcular_lag, validar_regressoes, calcular_q, calcular_multifractalidade,  bandpass_filter_fir
+from analise import gerar_grafico_hurst, MassExponent, expetro_multifractal, gerar_duplo_log
 app = Flask(__name__)
 
 
@@ -250,18 +250,32 @@ def criar_analise():
     dados_filtrados = dados[indices_canais]
     labels_filtrados = [labels[i] for i in indices_canais]
 
-    if filter_type == 'standard':
-        dados_filtrados = remover_ruido(dados_filtrados, sfreq)
-    elif filter_type == 'custom':
-        try:
-            lowcut = float(request.form.get('lowcut'))
-            highcut = float(request.form.get('highcut'))
-            if lowcut >= highcut or lowcut < 0 or highcut >= sfreq / 2:
-                raise ValueError("Valores de frequência inválidos.")
-            dados_filtrados = remover_ruido(dados_filtrados, sfreq, lowcut=lowcut, highcut=highcut)
-        except (ValueError, TypeError):
-            flash('Valores de filtro personalizado inválidos.', 'danger')
-            return redirect(url_for('analise', filename=nome_arquivo))
+    if metodo == 'mfdfa':
+        if filter_type == 'standard':
+            dados_filtrados = bandpass_filter_fir(dados_filtrados, sfreq)
+        elif filter_type == 'custom':
+            try:
+                lowcut = float(request.form.get('lowcut'))
+                highcut = float(request.form.get('highcut'))
+                if lowcut >= highcut or lowcut < 0 or highcut >= sfreq / 2:
+                    raise ValueError("Valores de frequência inválidos.")
+                dados_filtrados = bandpass_filter_fir(dados_filtrados, sfreq, lowcut=lowcut, highcut=highcut)
+            except (ValueError, TypeError):
+                flash('Valores de filtro personalizado inválidos.', 'danger')
+                return redirect(url_for('analise', filename=nome_arquivo))
+    else:
+        if filter_type == 'standard':
+            dados_filtrados = remover_ruido(dados_filtrados, sfreq)
+        elif filter_type == 'custom':
+            try:
+                lowcut = float(request.form.get('lowcut'))
+                highcut = float(request.form.get('highcut'))
+                if lowcut >= highcut or lowcut < 0 or highcut >= sfreq / 2:
+                    raise ValueError("Valores de frequência inválidos.")
+                dados_filtrados = remover_ruido(dados_filtrados, sfreq, lowcut=lowcut, highcut=highcut)
+            except (ValueError, TypeError):
+                flash('Valores de filtro personalizado inválidos.', 'danger')
+                return redirect(url_for('analise', filename=nome_arquivo))
             
     if metodo == 'fft':
         freqs, fft_result = aplicar_fft(dados_filtrados, sfreq)
@@ -295,25 +309,28 @@ def criar_analise():
         resultado = aplicar_mfdfa(dados_filtrados, sfreq, lags, q_values, order)
         
         # Realiza a validação
-        resultados_calculados, avisos = analisar_e_validar_mfdfa(lags, resultado["dfa"], q_values)
+        resultados_calculados, avisos = validar_regressoes(resultado["lag_out"], resultado["dfa"], resultado["q"])
         
         # SÓ entra aqui se houver avisos DE VERDADE
         if avisos:
             context = get_analise_context(nome_arquivo)
             # Certifique-se de que no seu HTML não tem um {{ resultados }} solto
             return render_template('analise.html', **context, avisos=avisos)
-        
-        duplo_log = gerar_mfdfa_grafico_duplo_log(resultado)
+         
         # 1. Calcular h(q), alpha, f(alpha)
-        h_q, tau_q, alpha, f_alpha = calcular_multifractalidade(resultado["dfa"], resultado["lag_out"], resultado["q"])
+        h_q = np.array([r["h"] for r in resultados_calculados])
+        tau_q, alpha, f_alpha = calcular_multifractalidade(h_q, resultado['q'])
 
         # 2. Gerar a string da imagem 
         ######### CORRIGIR ESSE GRAFICO AQUI
-        imagem_multifractal = gerar_graficos_multifractais(h_q, tau_q, alpha, f_alpha, resultado["q"])
+        duplo_log = gerar_duplo_log(resultado["lag_out"], resultado["dfa"], h_q, resultado["q"])
+        hurst_grafico = gerar_grafico_hurst(h_q, resultado["q"])
         psd_graficos = gerar_psd_em_base64(dados_filtrados, sfreq, labels_filtrados)
+        massa_grafico = MassExponent(tau_q, resultado["q"])
+        expectro_grafico = expetro_multifractal(alpha, f_alpha)
                 
         return render_template('resultados_mfdfa.html', 
-                               duplo_log=duplo_log, imagem_multifractal=imagem_multifractal, delta_alpha=max(alpha) - min(alpha), h_q=h_q, tau_q=tau_q, alpha=alpha, f_alpha=f_alpha, psd_graficos=psd_graficos)
+                               duplo_log=duplo_log, hurst_grafico=hurst_grafico, massa_grafico=massa_grafico, expectro_grafico=expectro_grafico, h_q=h_q, tau_q=tau_q, alpha=alpha, f_alpha=f_alpha, psd_graficos=psd_graficos)
     return redirect(url_for('analise', filename=nome_arquivo))
 
 

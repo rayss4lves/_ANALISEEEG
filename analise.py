@@ -349,6 +349,23 @@ def fig_to_base64(fig):
 
 
 ################################ DFA ################################
+from scipy.signal import firwin, filtfilt, hilbert
+
+def bandpass_filter_fir(dados, sfreq, lowcut=0.5, highcut=40.0, numtaps=301):
+    """
+    Filtro passa-banda FIR linear-phase + envoltória de amplitude (Hilbert).
+    """
+    # Cria coeficientes FIR com janela de Hamming
+    b = firwin(numtaps, [lowcut, highcut], pass_zero=False, fs=sfreq)
+    
+    # Aplica filtro de fase zero
+    dados_filtrados = filtfilt(b, [1.0], dados, axis=-1)
+    
+    # Extrai envoltória de amplitude
+    analytic_signal = hilbert(dados_filtrados, axis=-1)
+    amplitude_envelope = np.abs(analytic_signal)
+    
+    return amplitude_envelope
 
 # def calcular_lag(tam_sinal, n_lags=100, order=2):
 #     lag_min = order + 1
@@ -380,10 +397,7 @@ def calcular_lag(tam_sinal, scmin=32, scmax=None, scres=51):
     if scmax is None:
         # Recomendação do documento: scmax abaixo de 1/10 do tamanho da amostra
         scmax = tam_sinal // 10
-    
-    # Garantir que scmax seja razoável
-    if scmax <= scmin:
-        scmax = scmin * 4 # Valor arbitrário seguro se o sinal for muito curto
+    scmax = tam_sinal // scmax  # Garantir que scmax não ultrapasse N/10
         
     # Espaçamento igual entre log2(escala) conforme Código Matlab 15
     exponents = np.linspace(np.log2(scmin), np.log2(scmax), scres)
@@ -426,7 +440,7 @@ def aplicar_mfdfa(sinal, fs, lags, q_values, order):
     #exibir todos os resultados do dfa, o retorno tem a forma de uma matriz, onde cada linha corresponde a um valor de lag e cada coluna corresponde a um valor de q
     print("Resultados do MFDFA:")
     for i, lag_val in enumerate(lag_out):
-        print(f"Lag: {lag_val} | Fq: {dfa[i]}")
+        print(f"Lag: {lag_val} | Fq: {dfa[i]}" )
     # print(f"1 linha de resultado dfa:\n{dfa[0]}")
         
     return {
@@ -437,22 +451,46 @@ def aplicar_mfdfa(sinal, fs, lags, q_values, order):
         "q": q_values
     }
 
-def gerar_mfdfa_grafico_duplo_log(resultado):
-    plt.loglog(resultado["lag_out"], resultado["dfa"], 'o', label='fOU: MFDFA q=2')
-    metade = len(resultado["lag_out"])
-    np.polyfit(np.log(resultado["lag_out"][:metade]), np.log(resultado["dfa"][:metade]), 1)[0]
+def gerar_duplo_log(lag_out,dfa,h_q,q_values):
 
-    # plt.figure()
-    # plt.xlabel('Lag')
-    # plt.ylabel('DFA')
-    
+    plt.figure(figsize=(7,5))
+
+    q_plot = [-3, -1, 1, 3]
+
+    for i, q in enumerate(q_values):
+
+        if not np.any(np.isclose(q, q_plot)):
+            continue
+
+        Fq = dfa[:, i]
+
+        mask = (
+            np.isfinite(Fq) &
+            (Fq > 0)
+        )
+
+        plt.loglog(
+            lag_out[mask],
+            Fq[mask],
+            'o-',
+            markersize=4,
+            linewidth=1.5,
+            label=f"q={q:g} | h={h_q[i]:.3f}"
+        )
+
+    plt.title("Fluctuation Function")
+    plt.xlabel("Scale (s)")
+    plt.ylabel(r"$F_q(s)$")
+    plt.grid(True, which="both")
+    plt.legend(title="q", fontsize=8)
 
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', bbox_inches='tight', dpi=95)
+    plt.savefig(buf, format="png", bbox_inches="tight", dpi=95)
     plt.close()
+
     buf.seek(0)
 
-    return base64.b64encode(buf.read()).decode('utf-8')
+    return base64.b64encode(buf.read()).decode("utf-8")
 
 import numpy as np
 from sklearn.metrics import r2_score
@@ -460,81 +498,169 @@ from sklearn.metrics import r2_score
 import scipy.stats as stats 
 from scipy.stats import linregress
 
-def analisar_e_validar_mfdfa(lags, Fq_matrix, q_values, use_log2=False):
-    # Escolha da base do log
-    log_func = np.log2 if use_log2 else np.log
-    
-    log_lags = log_func(lags)
+def regressao_loglog(lag, Fq):
+    """
+    Calcula h(q), intercepto e R² para um único valor de q.
+    """
+
+
+    x = np.log(lag)
+    y = np.log(Fq)
+
+    # regressão linear
+    coef = np.polyfit(x, y, 1)
+
+    slope = coef[0]
+    intercept = coef[1]
+
+    # valores previstos pela reta
+    y_fit = np.polyval(coef, x)
+
+    # Soma dos quadrados dos resíduos
+    ss_res = np.sum((y - y_fit)**2)
+
+    # Soma total dos quadrados
+    ss_tot = np.sum((y - np.mean(y))**2)
+
+    # coeficiente de determinação
+    r2 = 1 - ss_res/ss_tot
+
+    return slope, intercept, r2
+         
+
+def calcular_multifractalidade(h_q, q_values):
+    """
+    Calcula tau(q), alpha e f(alpha)
+    usando o vetor h(q) já calculado.
+    """
+
+    h_q = np.asarray(h_q, dtype=float)
+
+    tau_q = q_values * h_q - 1
+
+    alpha = np.gradient(tau_q, q_values)
+
+    f_alpha = q_values * alpha - tau_q
+
+    return tau_q, alpha, f_alpha
+
+def validar_regressoes(lag_out, dfa, q_values):
+
     resultados = []
     avisos = []
-    
+
     for i, q in enumerate(q_values):
-        Fq = Fq_matrix[:, i]
-        
-        # Filtro de dados igual ao da função de cálculo (Kantelhardt)
-        mask = np.isfinite(Fq) & (Fq > 0)
-        
-        if np.sum(mask) < 3: # min_points
-            avisos.append(f"Atenção: Dados insuficientes para q={q:.1f}.")
+
+        Fq = dfa[:, i]
+
+        mask = (
+            np.isfinite(Fq) &
+            (Fq > 0)
+        )
+
+        if np.sum(mask) < 3:
+            avisos.append(
+                f"q={q:g}: dados insuficientes para regressão."
+            )
             continue
-            
-        x = log_lags[mask]
-        y = log_func(Fq[mask])
-        
-        # Usando linregress para ser idêntico ao cálculo principal
-        slope, intercept, r_value, _, _ = linregress(x, y)
-        r2 = r_value**2
-        
-        resultados.append({'q': q, 'h': slope, 'r2': r2})
-        
-        # Critério de validação
-        if round(r2, 3) < 0.95:
-            avisos.append(f"Atenção: O ajuste para q={q:.1f} apresentou baixa linearidade (R²={r2:.3f}).")
-            
+
+        h, b, r2 = regressao_loglog(
+            lag_out[mask],
+            Fq[mask]
+        )
+
+        resultados.append({
+            "q": q,
+            "h": h,
+            "intercept": b,
+            "r2": r2
+        })
+
+        if r2 < 0.95:
+            avisos.append(
+                f"q={q:g}: baixa linearidade (R²={r2:.3f})"
+            )
+
     return resultados, avisos
 
-def calcular_multifractalidade(resultados, escalas, q_values):
-    h_q = []
-    log_s = np.log(escalas)
-    
-    # Passo 2: Regressão Linear para encontrar h(q)
-    # resultados tem shape (len(escalas), len(q_values))
-    for i in range(len(q_values)):
-        # Pega a coluna i (todos os valores de escala para o q_i)
-        log_Fq = np.log(resultados[:, i])
-        slope, intercept, r_value, p_value, std_err = stats.linregress(log_s, log_Fq)
-        h_q.append(slope)
-    
-    h_q = np.array(h_q)
-    
-    # Passo 3: Calcular Tau(q)
-    tau_q = q_values * h_q - 1
-    
-    # Passo 4: Calcular Alpha e f(alpha) via gradiente (Legendre)
-    alpha = np.gradient(tau_q, q_values)
-    f_alpha = q_values * alpha - tau_q
-    
-    return h_q, tau_q, alpha, f_alpha
+def gerar_grafico_hurst(h_q, q_values):
 
-def gerar_graficos_multifractais(h_q, tau_q, alpha, f_alpha, q_values):
-    # Cria a figura com dois subplots
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    plt.figure(figsize=(7,5))
 
-    # Gráfico 1: Espectro de Singularidade
-    ax1.plot(alpha, f_alpha, 'o-', color='red', markersize=4)
-    ax1.set_title('Espectro de Singularidade $f(\\alpha)$')
-    ax1.set_xlabel('$\\alpha$')
-    ax1.set_ylabel('$f(\\alpha)$')
-    ax1.grid(True, linestyle='--', alpha=0.7)
+    plt.plot(
+        q_values,
+        h_q,
+        'o-',
+        linewidth=2,
+        color='blue'
+    )
 
-    # Gráfico 2: Expoente de Hurst Generalizado
-    ax2.plot(q_values, h_q, 's-', color='blue', markersize=4)
-    ax2.set_title('Expoente de Hurst $h(q)$')
-    ax2.set_xlabel('$q$')
-    ax2.set_ylabel('$h(q)$')
-    ax2.grid(True, linestyle='--', alpha=0.7)
+    plt.title("Generalized Hurst Exponent")
+    plt.xlabel("q")
+    plt.ylabel("h(q)")
+    plt.grid(True)
 
-    plt.tight_layout()
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png", bbox_inches="tight", dpi=120)
+    plt.close()
+
+    buf.seek(0)
+
+    return base64.b64encode(buf.read()).decode("utf-8")
+
+def MassExponent(tau_q, q_values):
+    plt.figure(figsize=(7,5))
+
+    plt.plot(
+        q_values,
+        tau_q,
+        'o-',
+        linewidth=2,
+        color='orange'
+    )
+
+    plt.title("Mass Exponent")
+    plt.xlabel("q")
+    plt.ylabel(r"$\tau(q)$")
+    plt.grid(True)
+
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png", bbox_inches="tight", dpi=120)
+    plt.close()
+
+    buf.seek(0)
+
+    return base64.b64encode(buf.read()).decode("utf-8")
+
+def expetro_multifractal(alpha, f_alpha):
+    plt.figure(figsize=(7,5))
+
+    plt.plot(
+        alpha,
+        f_alpha,
+        'o-',
+        linewidth=2,
+        color='red'
+    )
+
+    plt.title("Multifractal Spectrum")
+    plt.xlabel(r"$\alpha$")
+    plt.ylabel(r"$f(\alpha)$")
+    plt.grid(True)
+    
+    # Calcular Delta Alpha
+    delta_alpha = np.max(alpha) - np.min(alpha)
+
+    # Escrever no gráfico
+    plt.text(
+        0.05,
+        0.95,
+        rf'$\Delta\alpha = {delta_alpha:.3f}$',
+        transform=plt.gca().transAxes,
+        fontsize=11,
+        verticalalignment='top',
+        
+    )
 
     # Salva em buffer
     buf = io.BytesIO()
